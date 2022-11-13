@@ -34,7 +34,8 @@ pff pro 1071                                                                    
 Installation
 ------------
 
-Install one of the binaries 
+Install one of the binaries from the [latest release](https://github.com/peteraba/pff/releases/latest), or install it
+via Go: `go install github.com/peteraba/pff@latest`.
 
 Options
 -------
