@@ -50,14 +50,24 @@ func matchAll(words, searchTerms []string, numsOkay bool) bool {
 	return true
 }
 
-func visit(searchTerms []string, delimiters []rune, numsOkay bool) filepath.WalkFunc {
+func visit(searchTerms []string, delimiters []rune, numsOkay, caseSensitive bool) filepath.WalkFunc {
 	dMap := make(map[rune]struct{}, len(delimiters))
 	for _, sep := range delimiters {
 		dMap[sep] = struct{}{}
 	}
 
+	if !caseSensitive {
+		for i, st := range searchTerms {
+			searchTerms[i] = strings.ToLower(st)
+		}
+	}
+
 	return func(path string, f os.FileInfo, err error) error {
-		words := multiSplit(f.Name(), dMap)
+		fileName := f.Name()
+		if !caseSensitive {
+			fileName = strings.ToLower(fileName)
+		}
+		words := multiSplit(fileName, dMap)
 		if matchAll(words, searchTerms, numsOkay) {
 			fmt.Printf("%s\n", path)
 		}
@@ -75,6 +85,7 @@ func main() {
 	root := flag.String("root", currentDir, "directory used to find files (current working directory by default)")
 	delimiters := flag.String("delimiters", "|-. ", "characters used to find word boundaries")
 	numsOkay := flag.Bool("numsOkay", true, "if true, words prefixed or postfixed with numbers will be found")
+	caseSensitive := flag.Bool("caseSensitive", false, "if true, searches will be case sensitive")
 	flag.Parse()
 
 	searchTerms := flag.Args()
@@ -84,7 +95,7 @@ func main() {
 
 	delimiterRunes := []rune(*delimiters)
 
-	err = filepath.Walk(*root, visit(searchTerms, delimiterRunes, *numsOkay))
+	err = filepath.Walk(*root, visit(searchTerms, delimiterRunes, *numsOkay, *caseSensitive))
 	if err != nil {
 		log.Fatalf("filepath.Walk() error. err: %v", err)
 	}
